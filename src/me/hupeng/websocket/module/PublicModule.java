@@ -34,7 +34,7 @@ public class PublicModule {
                 user.setPassword(null);
                 user.setSalt(null);
                 Map<String, Object>data = new HashMap<>();
-                data.put("User", user);
+                data.put("user", user);
                 return Toolkit.getSuccessResult(data);
             }
         }

@@ -2,6 +2,8 @@ package me.hupeng.websocket.module;
 
 import com.google.gson.Gson;
 import org.nutz.ioc.loader.annotation.IocBean;
+import org.nutz.log.Log;
+import org.nutz.log.Logs;
 
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
@@ -46,7 +48,8 @@ public class MessageWebSocket {
     @OnMessage
     public void onMessage(String message, Session session) throws IOException,
             InterruptedException {
-        System.out.println("收到 会话: " + session.getId() + " 的消息（" + message + "）");
+        processMessage(message, session);
+//        System.out.println("收到 会话: " + session.getId() + " 的消息（" + message + "）");
         session.getAsyncRemote().sendText("回复:" + message);
     }
 
@@ -73,6 +76,9 @@ public class MessageWebSocket {
      * 用户上线
      * */
     private void onLine(int userId, Session session){
+        Log log= Logs.get();
+        log.info("用户" + userId + "上线了");
+
         //查看此用户之前是否存在登录状态,有则清除
         try {
             String sessionId = userId2SessionId.get(userId);
@@ -93,6 +99,8 @@ public class MessageWebSocket {
      * 用户发送消息
      * */
     private void sendMessage(int from, int to, String message){
+        Log log= Logs.get();
+        log.info("用户" + from + "给用户" +  to + "发送了一条消息,消息内容为:" + message);
         //存放数据库
 
         //判断有没有session
@@ -136,6 +144,8 @@ public class MessageWebSocket {
          * */
         private String message;
 
+        private String accessKey;
+
         public int getOperate() {
             return operate;
         }
@@ -166,6 +176,14 @@ public class MessageWebSocket {
 
         public void setMessage(String message) {
             this.message = message;
+        }
+
+        public String getAccessKey() {
+            return accessKey;
+        }
+
+        public void setAccessKey(String accessKey) {
+            this.accessKey = accessKey;
         }
     }
 
