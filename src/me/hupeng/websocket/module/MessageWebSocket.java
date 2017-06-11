@@ -58,6 +58,10 @@ public class MessageWebSocket {
             Message message = new Gson().fromJson(msg, Message.class);
             switch (message.getOperate()){
                 case Message.ON_LINE:
+                    onLine(message.from, session);
+                    break;
+                case Message.SEND_MESSAGE:
+                    sendMessage(message.from, message.to, message.message);
                     break;
             }
         }catch (Exception e){
@@ -89,6 +93,11 @@ public class MessageWebSocket {
      * 用户发送消息
      * */
     private void sendMessage(int from, int to, String message){
+        //存放数据库
+
+        //判断有没有session
+
+        //有session且发送成功则修改消息状态
 
     }
 
