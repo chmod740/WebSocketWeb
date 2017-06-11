@@ -1,5 +1,7 @@
 package me.hupeng.websocket.module;
 
+import com.google.gson.Gson;
+import me.hupeng.websocket.bean.Message;
 import org.nutz.ioc.loader.annotation.IocBean;
 
 import javax.websocket.*;
@@ -52,15 +54,31 @@ public class MessageWebSocket {
     /**
      * 处理用户消息
      * */
-    private void processMessage(){
-
+    private void processMessage(String msg, Session session){
+        try {
+            Message message = new Gson().fromJson(msg, Message.class);
+            switch (message.getOperate()){
+                case Message.ON_LINE:
+                    break;
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     /**
      * 用户上线
      * */
-    private void onLine(){
+    private void onLine(int userId, Session session){
+        //查看此用户之前是否存在登录状态,有则清除
+        try {
+            String sessionId = userId2SessionId.get(userId);
+            sessionId2Session.remove(sessionId);
+            userId2SessionId.remove(userId);
 
+        }catch (Exception e){
+
+        }
     }
 
     /**
