@@ -30,6 +30,7 @@ public class PublicModule {
             if (user!= null && user.getPassword().equals(Toolkit.passwordEncode(password, user.getSalt()))){
                 String ak = R.sg(64).next();
                 user.setAccessKey(ak);
+                dao.update(user);
                 user.setPassword(null);
                 user.setSalt(null);
                 Map<String, Object>data = new HashMap<>();
