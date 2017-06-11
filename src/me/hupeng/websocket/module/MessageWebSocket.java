@@ -1,7 +1,6 @@
 package me.hupeng.websocket.module;
 
 import com.google.gson.Gson;
-import me.hupeng.websocket.bean.Message;
 import org.nutz.ioc.loader.annotation.IocBean;
 
 import javax.websocket.*;
@@ -75,7 +74,12 @@ public class MessageWebSocket {
             String sessionId = userId2SessionId.get(userId);
             sessionId2Session.remove(sessionId);
             userId2SessionId.remove(userId);
+        }catch (Exception e){
 
+        }
+        //添加session与用户之间的关联
+        try {
+            userId2SessionId.put(userId, session.getId());
         }catch (Exception e){
 
         }
@@ -84,7 +88,76 @@ public class MessageWebSocket {
     /**
      * 用户发送消息
      * */
-    private void sendMessage(){
+    private void sendMessage(int from, int to, String message){
 
     }
+
+
+    /**
+     * Created by HUPENG on 2017/6/11.
+     */
+    public static class Message {
+        /**
+         * 上线
+         * */
+        public final static int ON_LINE = 0;
+        /**
+         * 发送消息
+         * */
+        public final static int SEND_MESSAGE = 1;
+
+
+        /**
+         *  操作
+         * */
+        private int operate;
+
+        /**
+         * 发信方
+         * */
+        private int from;
+
+        /**
+         * 收信方
+         * */
+        private int to;
+
+        /**
+         * 消息内容
+         * */
+        private String message;
+
+        public int getOperate() {
+            return operate;
+        }
+
+        public void setOperate(int operate) {
+            this.operate = operate;
+        }
+
+        public int getFrom() {
+            return from;
+        }
+
+        public void setFrom(int from) {
+            this.from = from;
+        }
+
+        public int getTo() {
+            return to;
+        }
+
+        public void setTo(int to) {
+            this.to = to;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+    }
+
 }
