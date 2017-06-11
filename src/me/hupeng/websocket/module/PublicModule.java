@@ -30,8 +30,10 @@ public class PublicModule {
             if (user!= null && user.getPassword().equals(Toolkit.passwordEncode(password, user.getSalt()))){
                 String ak = R.sg(64).next();
                 user.setAccessKey(ak);
+                user.setPassword(null);
+                user.setSalt(null);
                 Map<String, Object>data = new HashMap<>();
-                data.put("ak", ak);
+                data.put("User", user);
                 return Toolkit.getSuccessResult(data);
             }
         }

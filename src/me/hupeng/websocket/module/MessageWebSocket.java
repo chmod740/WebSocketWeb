@@ -13,20 +13,24 @@ public class MessageWebSocket {
     /**
      * 存放Websocket Session Id --> Session 的映射关系
      */
-    protected static ConcurrentHashMap<String, Session> sessions = new ConcurrentHashMap<>();
+    protected static ConcurrentHashMap<String, Session> sessionId2Session = new ConcurrentHashMap<>();
 
-
+    /**
+     * 用户Id --> SessionId的映射关系
+     */
+    protected static ConcurrentHashMap<Object, String>userId2SessionId = new ConcurrentHashMap<>();
 
     @OnOpen
     public void onOpen(Session session) {
-        sessions.put(session.getId(), session);
+        /***/
+        sessionId2Session.put(session.getId(), session);
         System.out.println("会话：" + session.getId() + " 连入服务器");
 
     }
 
     @OnClose
     public void onClose(Session session, CloseReason closeReason){
-        sessions.remove(session.getId());
+        sessionId2Session.remove(session.getId());
         System.out.println("会话："+ session.getId() + " 离开服务器");
     }
 
@@ -42,8 +46,27 @@ public class MessageWebSocket {
     public void onMessage(String message, Session session) throws IOException,
             InterruptedException {
         System.out.println("收到 会话: " + session.getId() + " 的消息（" + message + "）");
-       session.getAsyncRemote().sendText("回复:" + message);
+        session.getAsyncRemote().sendText("回复:" + message);
     }
 
+    /**
+     * 处理用户消息
+     * */
+    private void processMessage(){
 
+    }
+
+    /**
+     * 用户上线
+     * */
+    private void onLine(){
+
+    }
+
+    /**
+     * 用户发送消息
+     * */
+    private void sendMessage(){
+
+    }
 }
