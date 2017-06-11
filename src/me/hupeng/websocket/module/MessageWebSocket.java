@@ -1,4 +1,6 @@
-package me.hupeng.websocket;
+package me.hupeng.websocket.module;
+
+import org.nutz.ioc.loader.annotation.IocBean;
 
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
@@ -6,16 +8,20 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ServerEndpoint(value = "/websocket")
+@IocBean(singleton = true)
 public class MessageWebSocket {
     /**
      * 存放Websocket Session Id --> Session 的映射关系
      */
     protected static ConcurrentHashMap<String, Session> sessions = new ConcurrentHashMap<>();
 
+
+
     @OnOpen
     public void onOpen(Session session) {
         sessions.put(session.getId(), session);
         System.out.println("会话：" + session.getId() + " 连入服务器");
+
     }
 
     @OnClose
@@ -38,4 +44,6 @@ public class MessageWebSocket {
         System.out.println("收到 会话: " + session.getId() + " 的消息（" + message + "）");
        session.getAsyncRemote().sendText("回复:" + message);
     }
+
+
 }
