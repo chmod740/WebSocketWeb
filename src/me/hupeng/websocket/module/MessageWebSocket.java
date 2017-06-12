@@ -1,6 +1,11 @@
 package me.hupeng.websocket.module;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import me.hupeng.websocket.MainSetup;
+import me.hupeng.websocket.bean.Msg;
+import org.nutz.dao.Cnd;
+import org.nutz.dao.Dao;
 import org.nutz.ioc.loader.annotation.IocBean;
 import org.nutz.log.Log;
 import org.nutz.log.Logs;
@@ -8,11 +13,17 @@ import org.nutz.log.Logs;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-@ServerEndpoint(value = "/websocket")
+@ServerEndpoint(value = "/chat")
 @IocBean(singleton = true)
 public class MessageWebSocket {
+    Dao dao = MainSetup.dao;
+    Gson gson =  new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
+    Log log = Logs.get();
+
     /**
      * 存放Websocket Session Id --> Session 的映射关系
      */
@@ -25,7 +36,6 @@ public class MessageWebSocket {
 
     @OnOpen
     public void onOpen(Session session) {
-        /***/
         sessionId2Session.put(session.getId(), session);
         System.out.println("会话：" + session.getId() + " 连入服务器");
 
@@ -48,9 +58,8 @@ public class MessageWebSocket {
     @OnMessage
     public void onMessage(String message, Session session) throws IOException,
             InterruptedException {
+        //调用消息处理函数
         processMessage(message, session);
-//        System.out.println("收到 会话: " + session.getId() + " 的消息（" + message + "）");
-        session.getAsyncRemote().sendText("回复:" + message);
     }
 
     /**
@@ -58,7 +67,7 @@ public class MessageWebSocket {
      * */
     private void processMessage(String msg, Session session){
         try {
-            Message message = new Gson().fromJson(msg, Message.class);
+            Message message =  gson.fromJson(msg, Message.class);
             switch (message.getOperate()){
                 case Message.ON_LINE:
                     onLine(message.from, session);
@@ -93,6 +102,21 @@ public class MessageWebSocket {
         }catch (Exception e){
 
         }
+
+        //检查用户名下是否有未收到的消息,有则发送之
+        List<Msg>list = dao.query(Msg.class, Cnd.where("to_user", "=", userId).asc("id"));
+        for(Msg msg: list){
+            try {
+                Message message = new Message();
+                message.from = msg.getFrom();
+                message.to = msg.getTo();
+                message.sendTime = msg.getSendTime();
+                message.message = msg.getMessage();
+                session.getAsyncRemote().sendText(gson.toJson(message));
+            }catch (Exception e){
+
+            }
+        }
     }
 
     /**
@@ -102,16 +126,39 @@ public class MessageWebSocket {
         Log log= Logs.get();
         log.info("用户" + from + "给用户" +  to + "发送了一条消息,消息内容为:" + message);
         //存放数据库
+        Msg msg = new Msg();
+        msg.setSendTime(new Date(System.currentTimeMillis()));
+        msg.setFrom(from);
+        msg.setTo(to);
+        msg.setMessage(message);
+        msg.setSendResult(0);
+        dao.insert(msg);
 
         //判断有没有session
+        ////有session且发送成功则修改消息状态
+        String sessionId = userId2SessionId.get(to);
+        if (sessionId != null){
+            Session session = sessionId2Session.get(sessionId);
+            try {
+                if (session != null){
+                    Message message1 = new Message();
+                    message1.from = from;
+                    message1.to = to;
+                    message1.message = message;
+                    message1.sendTime = new Date(System.currentTimeMillis());
+                    session.getAsyncRemote().sendText(gson.toJson(message1));
+                    msg.setSendResult(1);
+                    dao.update(msg);
+                }
+            }catch (Exception e){
 
-        //有session且发送成功则修改消息状态
-
+            }
+        }
     }
 
 
     /**
-     * Created by HUPENG on 2017/6/11.
+     * 消息类
      */
     public static class Message {
         /**
@@ -143,6 +190,11 @@ public class MessageWebSocket {
          * 消息内容
          * */
         private String message;
+
+        /**
+         * 发送时间
+         * */
+        private Date sendTime;
 
         private String accessKey;
 
@@ -184,6 +236,14 @@ public class MessageWebSocket {
 
         public void setAccessKey(String accessKey) {
             this.accessKey = accessKey;
+        }
+
+        public Date getSendTime() {
+            return sendTime;
+        }
+
+        public void setSendTime(Date sendTime) {
+            this.sendTime = sendTime;
         }
     }
 

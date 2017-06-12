@@ -23,6 +23,12 @@ public class Msg {
     @Column("send_time")
     private Date sendTime;
 
+    @Column("message")
+    private String message;
+
+    @Column("send_result")
+    private int sendResult;
+
     public int getId() {
         return id;
     }
@@ -53,5 +59,21 @@ public class Msg {
 
     public void setSendTime(Date sendTime) {
         this.sendTime = sendTime;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public int getSendResult() {
+        return sendResult;
+    }
+
+    public void setSendResult(int sendResult) {
+        this.sendResult = sendResult;
     }
 }

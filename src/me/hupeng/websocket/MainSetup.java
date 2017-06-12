@@ -10,6 +10,7 @@ import org.nutz.mvc.Setup;
 
 public class MainSetup implements Setup{
     public static Ioc ioc;
+    public static Dao dao;
     @Override
     public void destroy(NutConfig arg0) {
         // TODO Auto-generated method stub
@@ -18,7 +19,8 @@ public class MainSetup implements Setup{
     @Override
     public void init(NutConfig conf) {
         MainSetup.ioc = conf.getIoc();
-        Dao dao = ioc.get(Dao.class);
+        dao = ioc.get(Dao.class);
+
         Daos.createTablesInPackage(dao, "me.hupeng.websocket", false);
 
         if (dao.count(User.class) == 0){
