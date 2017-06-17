@@ -1,4 +1,4 @@
-package me.hupeng.websocket.module;
+package me.hupeng.websocket.module.websocket;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -19,10 +19,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @ServerEndpoint(value = "/chat")
 @IocBean(singleton = true)
-public class MessageWebSocket {
+public abstract class MessageWebSocketServer {
     Dao dao = MainSetup.dao;
     Gson gson =  new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
-    Log log = Logs.get();
 
     /**
      * 存放Websocket Session Id --> Session 的映射关系
@@ -70,10 +69,10 @@ public class MessageWebSocket {
             Message message =  gson.fromJson(msg, Message.class);
             switch (message.getOperate()){
                 case Message.ON_LINE:
-                    onLine(message.from, session);
+                    onLine(message.getFrom(), session);
                     break;
                 case Message.SEND_MESSAGE:
-                    sendMessage(message.from, message.to, message.message);
+                    sendMessage(message.getFrom(), message.getTo(), message.getMessage());
                     break;
             }
         }catch (Exception e){
@@ -104,15 +103,17 @@ public class MessageWebSocket {
         }
 
         //检查用户名下是否有未收到的消息,有则发送之
-        List<Msg>list = dao.query(Msg.class, Cnd.where("to_user", "=", userId).asc("id"));
+        List<Msg>list = dao.query(Msg.class, Cnd.where("to_user", "=", userId).and("send_result", "=", "0").asc("id"));
         for(Msg msg: list){
             try {
                 Message message = new Message();
-                message.from = msg.getFrom();
-                message.to = msg.getTo();
-                message.sendTime = msg.getSendTime();
-                message.message = msg.getMessage();
+                message.setFrom(msg.getFrom());
+                message.setTo(msg.getTo());
+                message.setSendTime(msg.getSendTime());
+                message.setMessage(msg.getMessage());
                 session.getAsyncRemote().sendText(gson.toJson(message));
+                msg.setSendResult(1);
+                dao.update(msg);
             }catch (Exception e){
 
             }
@@ -142,10 +143,10 @@ public class MessageWebSocket {
             try {
                 if (session != null){
                     Message message1 = new Message();
-                    message1.from = from;
-                    message1.to = to;
-                    message1.message = message;
-                    message1.sendTime = new Date(System.currentTimeMillis());
+                    message1.setFrom(from);
+                    message1.setTo(to);
+                    message1.setMessage(message);
+                    message1.setSendTime(new Date(System.currentTimeMillis()));
                     session.getAsyncRemote().sendText(gson.toJson(message1));
                     msg.setSendResult(1);
                     dao.update(msg);
@@ -157,94 +158,6 @@ public class MessageWebSocket {
     }
 
 
-    /**
-     * 消息类
-     */
-    public static class Message {
-        /**
-         * 上线
-         * */
-        public final static int ON_LINE = 0;
-        /**
-         * 发送消息
-         * */
-        public final static int SEND_MESSAGE = 1;
 
-
-        /**
-         *  操作
-         * */
-        private int operate;
-
-        /**
-         * 发信方
-         * */
-        private int from;
-
-        /**
-         * 收信方
-         * */
-        private int to;
-
-        /**
-         * 消息内容
-         * */
-        private String message;
-
-        /**
-         * 发送时间
-         * */
-        private Date sendTime;
-
-        private String accessKey;
-
-        public int getOperate() {
-            return operate;
-        }
-
-        public void setOperate(int operate) {
-            this.operate = operate;
-        }
-
-        public int getFrom() {
-            return from;
-        }
-
-        public void setFrom(int from) {
-            this.from = from;
-        }
-
-        public int getTo() {
-            return to;
-        }
-
-        public void setTo(int to) {
-            this.to = to;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public void setMessage(String message) {
-            this.message = message;
-        }
-
-        public String getAccessKey() {
-            return accessKey;
-        }
-
-        public void setAccessKey(String accessKey) {
-            this.accessKey = accessKey;
-        }
-
-        public Date getSendTime() {
-            return sendTime;
-        }
-
-        public void setSendTime(Date sendTime) {
-            this.sendTime = sendTime;
-        }
-    }
 
 }
