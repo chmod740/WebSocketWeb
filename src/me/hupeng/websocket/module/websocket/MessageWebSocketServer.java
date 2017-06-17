@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @ServerEndpoint(value = "/chat")
 @IocBean(singleton = true)
-public abstract class MessageWebSocketServer {
+public class MessageWebSocketServer {
     Dao dao = MainSetup.dao;
     Gson gson =  new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
 
